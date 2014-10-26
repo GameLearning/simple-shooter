@@ -42,12 +42,31 @@ void HelloWorld::initTouch(){
 }
 
 Sprite* HelloWorld::addNinja(){
-    Sprite* ninja = Sprite::create("player.png");
+    ninja = Sprite::create("player.png");
     ninja->setPosition(Vec2(_visibleSize.width * 0.1 ,_visibleSize.height/2));
     return ninja;
 }
 
 bool HelloWorld::onTouchBegan(Touch *touch, Event * event){ 
+    Vec2 touchLocation = touch->getLocation();
+    Vec2 offset = ninja->getPosition() - touchLocation;
+    
+    float   ratio     = offset.y/offset.x;
+    int     targetX   = ninja->getContentSize().width/2 + _visibleSize.width;
+    int     targetY   = (targetX*ratio) + ninja->getPositionY();
+    Vec2 targetPosition = Vec2(targetX,targetY);
+    
+    Sprite* projectile = Sprite::create("projectile.png");
+    projectile->setPosition(ninja->getPosition());
+    this->addChild(projectile);
+    
+    auto actionMove = MoveTo::create(1.5f,targetPosition);
+    auto seq = Sequence::create(actionMove,
+        CallFunc::create(projectile, callfunc_selector(Sprite::removeFromParent)),
+        NULL);
+    
+    projectile->runAction(seq);
+    
     return true;
 }
 
@@ -68,8 +87,8 @@ void HelloWorld::addMonster(float dt){
     int randomDuration = (rand() % rangeDuration) + minDuration;
 
     auto actionMove = MoveTo::create(randomDuration,Vec2(0,randomY));
-    CCSequence* seq = CCSequence::create(actionMove,
-        CCCallFunc::create(monster, callfunc_selector(CCSprite::removeFromParent)),
+    Sequence* seq = Sequence::create(actionMove,
+        CallFunc::create(monster, callfunc_selector(Sprite::removeFromParent)),
         NULL);
     
     monster->runAction(seq);

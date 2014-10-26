@@ -17,6 +17,7 @@ private:
     void initTouch();
     void addMonster(float dt);
     cocos2d::Sprite *addNinja();
+    cocos2d::Sprite* ninja;
     
     cocos2d::Size _visibleSize;
 };
