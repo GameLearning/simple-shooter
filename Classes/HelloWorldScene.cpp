@@ -1,15 +1,21 @@
 #include "HelloWorldScene.h"
 
 USING_NS_CC;
-
+enum{
+    kMonster = 1,
+    kNinja,
+    kProjectile
+};
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
-    auto scene = Scene::create();
+    auto scene = Scene::createWithPhysics();
+    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+    scene->getPhysicsWorld()->setGravity(Vec2(0,0));
     
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
-
+    layer->setPhyWorld(scene->getPhysicsWorld());
     // add layer as a child to scene
     scene->addChild(layer);
 
@@ -30,7 +36,8 @@ bool HelloWorld::init()
     _visibleSize = Director::getInstance()->getVisibleSize();
 
     initTouch();
-    this->addChild(addNinja());
+    addNinja();
+    addPhysics();
     this->schedule(schedule_selector(HelloWorld::addMonster),1.5f);
     return true;
 }
@@ -41,13 +48,20 @@ void HelloWorld::initTouch(){
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
-Sprite* HelloWorld::addNinja(){
+void HelloWorld::addNinja(){
     ninja = Sprite::create("player.png");
     ninja->setPosition(Vec2(_visibleSize.width * 0.1 ,_visibleSize.height/2));
-    return ninja;
+    
+    auto pysicsBody = PhysicsBody::createBox(ninja->getContentSize());
+    ninja->setPhysicsBody(pysicsBody);
+    ninja->getPhysicsBody()->setCategoryBitmask(kNinja);
+    ninja->getPhysicsBody()->setContactTestBitmask(kMonster);
+    
+    this->addChild(ninja);
 }
 
 bool HelloWorld::onTouchBegan(Touch *touch, Event * event){ 
+    CCLOG("Touch");
     Vec2 touchLocation = touch->getLocation();
     Vec2 offset = ninja->getPosition() - touchLocation;
     
@@ -57,6 +71,10 @@ bool HelloWorld::onTouchBegan(Touch *touch, Event * event){
     Vec2 targetPosition = Vec2(targetX,targetY);
     
     Sprite* projectile = Sprite::create("projectile.png");
+    auto pysicsBody = PhysicsBody::createBox(projectile->getContentSize());
+    projectile->setPhysicsBody(pysicsBody);
+    projectile->getPhysicsBody()->setContactTestBitmask(kMonster);
+    projectile->getPhysicsBody()->setCategoryBitmask(kProjectile);
     projectile->setPosition(ninja->getPosition());
     this->addChild(projectile);
     
@@ -72,7 +90,11 @@ bool HelloWorld::onTouchBegan(Touch *touch, Event * event){
 
 void HelloWorld::addMonster(float dt){
     Sprite * monster = Sprite::create("monster.png");
-
+    auto pysicsBody = PhysicsBody::createBox(monster->getContentSize());
+    monster->setPhysicsBody(pysicsBody);
+    monster->getPhysicsBody()->setCategoryBitmask(kMonster);
+    monster->getPhysicsBody()->setContactTestBitmask(kNinja|kProjectile);
+    
     int minY = monster->getContentSize().height / 2;
     int maxY = _visibleSize.height - monster->getContentSize().height / 2;
     int rangeY = maxY - minY;
@@ -92,4 +114,28 @@ void HelloWorld::addMonster(float dt){
         NULL);
     
     monster->runAction(seq);
+}
+
+void HelloWorld::addPhysics(){
+    CCLOG("addPhysics");
+    auto contactListener = EventListenerPhysicsContact::create();
+    contactListener->onContactBegin = CC_CALLBACK_1(HelloWorld::onContactBegin, this);
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(contactListener, this);
+}
+
+bool HelloWorld::onContactBegin(cocos2d::PhysicsContact& contact){
+    PhysicsBody *a = contact.getShapeA()->getBody();
+    PhysicsBody *b = contact.getShapeB()->getBody();
+    
+    contactLogic(a,b);
+    contactLogic(b,a);
+    
+    return true;
+}
+
+void HelloWorld::contactLogic(PhysicsBody *a,PhysicsBody *b){
+    if(a->getCategoryBitmask() == kProjectile){
+        this->removeChild(a->getNode(),true);
+        this->removeChild(b->getNode(),true);
+    }
 }

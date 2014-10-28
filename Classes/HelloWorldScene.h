@@ -16,8 +16,15 @@ public:
 private:
     void initTouch();
     void addMonster(float dt);
-    cocos2d::Sprite *addNinja();
+    
+    void addPhysics();
+    void setPhyWorld(cocos2d::PhysicsWorld* world){_physicsWorld = world;}
+    bool onContactBegin(cocos2d::PhysicsContact &contact);
+    void contactLogic(cocos2d::PhysicsBody *a, cocos2d::PhysicsBody *b);
+    
+    void addNinja();
     cocos2d::Sprite* ninja;
     
     cocos2d::Size _visibleSize;
+    cocos2d::PhysicsWorld *_physicsWorld;
 };
