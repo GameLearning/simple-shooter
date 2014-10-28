@@ -45,6 +45,7 @@ bool HelloWorld::init()
 void HelloWorld::initTouch(){
     auto listener = EventListenerTouchOneByOne::create();
     listener->onTouchBegan = CC_CALLBACK_2(HelloWorld::onTouchBegan, this);
+    listener->onTouchEnded = CC_CALLBACK_2(HelloWorld::onTouchEnded, this);
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
@@ -61,21 +62,33 @@ void HelloWorld::addNinja(){
 }
 
 bool HelloWorld::onTouchBegan(Touch *touch, Event * event){ 
-    CCLOG("Touch");
+    
+}
+void HelloWorld::onTouchEnded(Touch *touch, Event * event){
     Vec2 touchLocation = touch->getLocation();
     Vec2 offset = ninja->getPosition() - touchLocation;
+    if (offset.x >= 0) return;
     
     float   ratio     = offset.y/offset.x;
     int     targetX   = ninja->getContentSize().width/2 + _visibleSize.width;
     int     targetY   = (targetX*ratio) + ninja->getPositionY();
     Vec2 targetPosition = Vec2(targetX,targetY);
     
-    
     float angleRadians = (float)offset.y / (float)offset.x;
     float angleDegrees = CC_RADIANS_TO_DEGREES(angleRadians);
     float cocosAngle = -1 * angleDegrees;
-    ninja->setRotation(cocosAngle);
     
+    float rotateDegreesPerSecond = 180 / 0.5; // Would take 0.5 seconds to rotate 180 degrees, or half a circle
+    float degreesDiff = ninja->getRotation() - cocosAngle;
+    float rotateDuration = fabs(degreesDiff / rotateDegreesPerSecond);
+    
+    auto seq = Sequence::create(RotateTo::create(rotateDuration, cocosAngle),
+            CallFunc::create( CC_CALLBACK_0(HelloWorld::addProjectile,this,targetPosition)),
+            NULL);
+    
+    ninja->runAction(seq);
+}
+void HelloWorld::addProjectile(Vec2 targetPosition){
     Sprite* projectile = Sprite::create("projectile2.png");
     auto pysicsBody = PhysicsBody::createBox(projectile->getContentSize());
     projectile->setPhysicsBody(pysicsBody);
@@ -90,8 +103,6 @@ bool HelloWorld::onTouchBegan(Touch *touch, Event * event){
         NULL);
     
     projectile->runAction(seq);
-    
-    return true;
 }
 
 void HelloWorld::addMonster(float dt){

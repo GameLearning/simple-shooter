@@ -13,16 +13,18 @@ public:
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
     virtual bool onTouchBegan(cocos2d::Touch *touch, cocos2d::Event * event);
+    virtual void onTouchEnded(cocos2d::Touch *touch, cocos2d::Event * event);
 private:
     void initTouch();
     void addMonster(float dt);
+    void addNinja();
+    void addProjectile(cocos2d::Vec2 targetPosition);
     
     void addPhysics();
     void setPhyWorld(cocos2d::PhysicsWorld* world){_physicsWorld = world;}
     bool onContactBegin(cocos2d::PhysicsContact &contact);
     void contactLogic(cocos2d::PhysicsBody *a, cocos2d::PhysicsBody *b);
     
-    void addNinja();
     cocos2d::Sprite* ninja;
     
     cocos2d::Size _visibleSize;
