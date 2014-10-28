@@ -49,14 +49,14 @@ void HelloWorld::initTouch(){
 }
 
 void HelloWorld::addNinja(){
-    ninja = Sprite::create("player.png");
+    ninja = Sprite::create("player2.png");
     ninja->setPosition(Vec2(_visibleSize.width * 0.1 ,_visibleSize.height/2));
     
-    auto pysicsBody = PhysicsBody::createBox(ninja->getContentSize());
-    ninja->setPhysicsBody(pysicsBody);
-    ninja->getPhysicsBody()->setCategoryBitmask(kNinja);
-    ninja->getPhysicsBody()->setContactTestBitmask(kMonster);
-    
+//    auto pysicsBody = PhysicsBody::createBox(ninja->getContentSize());
+//    ninja->setPhysicsBody(pysicsBody);
+//    ninja->getPhysicsBody()->setCategoryBitmask(kNinja);
+//    ninja->getPhysicsBody()->setContactTestBitmask(kMonster);
+
     this->addChild(ninja);
 }
 
@@ -70,7 +70,13 @@ bool HelloWorld::onTouchBegan(Touch *touch, Event * event){
     int     targetY   = (targetX*ratio) + ninja->getPositionY();
     Vec2 targetPosition = Vec2(targetX,targetY);
     
-    Sprite* projectile = Sprite::create("projectile.png");
+    
+    float angleRadians = (float)offset.y / (float)offset.x;
+    float angleDegrees = CC_RADIANS_TO_DEGREES(angleRadians);
+    float cocosAngle = -1 * angleDegrees;
+    ninja->setRotation(cocosAngle);
+    
+    Sprite* projectile = Sprite::create("projectile2.png");
     auto pysicsBody = PhysicsBody::createBox(projectile->getContentSize());
     projectile->setPhysicsBody(pysicsBody);
     projectile->getPhysicsBody()->setContactTestBitmask(kMonster);
